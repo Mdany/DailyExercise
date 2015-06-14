@@ -61,6 +61,11 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * 获取数据
+     * @param url   地址
+     * @return      返回json中所有News对象
+     */
     private List<News> getData(String url){
         List<News> newsList = new ArrayList<News>();
         News news;
@@ -83,6 +88,11 @@ public class MainActivity extends ActionBarActivity {
         return newsList;
     }
 
+    /**
+     * 读取json
+     * @param url  url对象
+     * @return     返回json
+     */
     private String readJSON(URL url){
         StringBuffer str = new StringBuffer();
         InputStream is;
@@ -101,6 +111,9 @@ public class MainActivity extends ActionBarActivity {
         return str.toString();
     }
 
+    /**
+     * 异步任务获取一组News初始化adapter
+     */
     private class NewsAsyncTask extends AsyncTask<String,Void,List<News>>{
 
         @Override

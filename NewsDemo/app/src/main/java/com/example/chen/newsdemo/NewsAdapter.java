@@ -1,6 +1,8 @@
 package com.example.chen.newsdemo;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,13 +22,14 @@ public class NewsAdapter extends BaseAdapter {
     private List<News> newsList;
     private LayoutInflater mLayoutInflater;
 
+    private ImageLoader imageLoader;
+
     public NewsAdapter(Context context,List<News> newsList){
         this.mContext=context;
         this.newsList=newsList;
         mLayoutInflater=LayoutInflater.from(context);
+        imageLoader=new ImageLoader();
     }
-
-    public NewsAdapter(){}
 
     @Override
     public int getCount() {
@@ -53,15 +56,18 @@ public class NewsAdapter extends BaseAdapter {
             viewHolder.title= (TextView) convertView.findViewById(R.id.title);
             viewHolder.content= (TextView) convertView.findViewById(R.id.content);
             convertView.setTag(viewHolder);
-
-
         }else{
             viewHolder= (VIewHolder) convertView.getTag();
         }
         News news = newsList.get(position);
         String iconURL=news.getNewsIconrl();
-        //viewHolder.newsIcon.setImageBitmap();
-
+        viewHolder.newsIcon.setTag(iconURL);
+        viewHolder.newsIcon.setImageResource(R.drawable.ic_launcher);
+        if(imageLoader.getLrcBitmap(iconURL)!=null){
+            viewHolder.newsIcon.setImageBitmap(imageLoader.getLrcBitmap(iconURL));
+        }else{
+            imageLoader.setBitmap(viewHolder.newsIcon,iconURL);
+        }
         viewHolder.title.setText(news.getNewsName());
         viewHolder.content.setText(news.getNewsDescription());
 
