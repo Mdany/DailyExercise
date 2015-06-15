@@ -6,29 +6,46 @@ import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by CHEN on 2015/6/13.
  */
-public class NewsAdapter extends BaseAdapter {
+public class NewsAdapter extends BaseAdapter implements AbsListView.OnScrollListener {
 
     private Context mContext;
 
     private List<News> newsList;
     private LayoutInflater mLayoutInflater;
+    private ListView listView;
 
     private ImageLoader imageLoader;
 
-    public NewsAdapter(Context context,List<News> newsList){
+    private int start,end;
+    private boolean flag;
+    private ArrayList<String> urlList;
+
+    public NewsAdapter(Context context,List<News> newsList,ListView listView){
+        this.listView=listView;
+        this.listView.setOnScrollListener(this);
         this.mContext=context;
         this.newsList=newsList;
-        mLayoutInflater=LayoutInflater.from(context);
-        imageLoader=new ImageLoader();
+        this.mLayoutInflater=LayoutInflater.from(context);
+        this.imageLoader=new ImageLoader(listView);
+        this.urlList=new ArrayList<String>();
+        for(int i=0;i<newsList.size();i++){
+            urlList.add(newsList.get(i).getNewsIconrl());
+        }
+
+        flag=true;
     }
 
     @Override
@@ -63,15 +80,34 @@ public class NewsAdapter extends BaseAdapter {
         String iconURL=news.getNewsIconrl();
         viewHolder.newsIcon.setTag(iconURL);
         viewHolder.newsIcon.setImageResource(R.drawable.ic_launcher);
-        if(imageLoader.getLrcBitmap(iconURL)!=null){
-            viewHolder.newsIcon.setImageBitmap(imageLoader.getLrcBitmap(iconURL));
-        }else{
-            imageLoader.setBitmap(viewHolder.newsIcon,iconURL);
-        }
+//        if(imageLoader.getLrcBitmap(iconURL)!=null){
+//            viewHolder.newsIcon.setImageBitmap(imageLoader.getLrcBitmap(iconURL));
+//        }else{
+//            imageLoader.setBitmap(viewHolder.newsIcon,iconURL);
+//        }
         viewHolder.title.setText(news.getNewsName());
         viewHolder.content.setText(news.getNewsDescription());
 
         return convertView;
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        if(scrollState==SCROLL_STATE_IDLE){
+            this.imageLoader.loadImage(urlList.subList(start,end));//只把显示出来的item的图片url传过去
+        }else{
+            this.imageLoader.interuptLoadImage();
+        }
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        start=firstVisibleItem;
+        end=start+visibleItemCount;
+        if(flag&&visibleItemCount>0){
+            imageLoader.loadImage(urlList.subList(start,end));
+            flag=false;
+        }
     }
 
     private class VIewHolder{
@@ -80,5 +116,9 @@ public class NewsAdapter extends BaseAdapter {
         private TextView content;
     }
 
+    public void refresh(List<News> newsList){
+        this.newsList=newsList;
+        this.notifyDataSetChanged();
+    }
 
 }

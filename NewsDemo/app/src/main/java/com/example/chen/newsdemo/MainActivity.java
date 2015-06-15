@@ -1,10 +1,11 @@
 package com.example.chen.newsdemo;
 
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
@@ -13,7 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,8 +26,22 @@ import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
+    private SwipeRefreshLayout pullRefreshView;
     private ListView mListView;
+    private NewsAdapter mNewsAdapter;
+
     private static String URL = "http://www.imooc.com/api/teacher?type=4&num=30";
+
+    private Handler handler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if(msg.what==1){
+                mNewsAdapter.refresh((List<News>) msg.obj);
+                pullRefreshView.setRefreshing(false);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +49,16 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         mListView = (ListView)findViewById(R.id.listView);
+        pullRefreshView= (SwipeRefreshLayout) findViewById(R.id.pullRefresh);
+        pullRefreshView.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshList();
+            }
+        });
+        pullRefreshView.setColorScheme(android.R.color.holo_green_light,
+                android.R.color.holo_blue_bright,android.R.color.holo_red_light,
+                android.R.color.holo_orange_light);
         new NewsAsyncTask().execute(URL);
     }
 
@@ -111,6 +135,17 @@ public class MainActivity extends ActionBarActivity {
         return str.toString();
     }
 
+    private void refreshList(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Message msg=handler.obtainMessage(1,getData(URL));
+                //handler.sendMessageDelayed(msg,5000);
+                handler.sendMessage(msg);
+            }
+        }).start();
+    }
+
     /**
      * 异步任务获取一组News初始化adapter
      */
@@ -124,7 +159,7 @@ public class MainActivity extends ActionBarActivity {
         @Override
         protected void onPostExecute(List<News> news) {
             super.onPostExecute(news);
-            NewsAdapter mNewsAdapter = new NewsAdapter(MainActivity.this,news);
+            mNewsAdapter = new NewsAdapter(MainActivity.this,news,mListView);
             mListView.setAdapter(mNewsAdapter);
         }
     }
