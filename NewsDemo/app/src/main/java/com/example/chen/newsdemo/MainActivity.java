@@ -37,7 +37,7 @@ public class MainActivity extends ActionBarActivity {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if(msg.what==1){
-                mNewsAdapter.refresh((List<News>) msg.obj);
+                mNewsAdapter.refresh((List<News>) msg.obj);//只刷新item信息，如果图片变更则URL会变，根据url不同缓存查不出来自然回去加载
                 pullRefreshView.setRefreshing(false);
             }
         }

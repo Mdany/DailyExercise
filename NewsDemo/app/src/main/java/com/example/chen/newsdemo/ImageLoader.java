@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLStreamHandler;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -119,10 +120,6 @@ public class ImageLoader {
             InputStream is = mURL.openConnection().getInputStream();
             bitmap = BitmapFactory.decodeStream(is);
             addLrcBitmap(url,bitmap);
-            Message msg=new Message();//msg=mHandler.obtainMessage();
-            msg.obj=bitmap;
-            msg.what=1;
-            handler.sendMessage(msg);
             is.close();
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -147,14 +144,19 @@ public class ImageLoader {
 
         @Override
         protected List<Bitmap> doInBackground(List<String>... params) {
-            ArrayList<String> urls= (ArrayList<String>) params[0];
+            Log.i("wcy", String.valueOf(System.currentTimeMillis()));
+            AbstractList<String> urls= (AbstractList<String>) params[0];
             ArrayList<Bitmap> bitmaps=new ArrayList<Bitmap>();
             Bitmap bitmap;
             ImageView imageViewTemp;
             for(int i=0;i<urls.size();i++){
                 bitmap=getLrcBitmap(urls.get(i));
                 imageViewTemp= (ImageView) listView.findViewWithTag(urls.get(i));
-                imageViews.add(imageViewTemp);
+                if(imageViewTemp==null){
+                    Log.i("wcy", "imageView is null"+"...."+urls.get(i));
+                    //很奇怪的bug，有时候imageViewTemp==null导致崩溃，初步怀疑是adapter.getView里面setTag时候用的局部变量作实参
+                }
+                imageViews.add((ImageView) listView.findViewWithTag(urls.get(i)));
                 if(bitmap!=null){
                     bitmaps.add(bitmap);
                 }else{
@@ -168,9 +170,11 @@ public class ImageLoader {
         @Override
         protected void onPostExecute(List<Bitmap> bitmaps) {
             super.onPostExecute(bitmaps);
+            Log.i("wcy", String.valueOf(System.currentTimeMillis()));
             for(int j=0;j<bitmaps.size();j++){
                 imageViews.get(j).setImageBitmap(bitmaps.get(j));
             }
+            imageViews.clear();
         }
     }
 }

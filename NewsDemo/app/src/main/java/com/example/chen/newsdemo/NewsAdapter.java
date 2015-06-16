@@ -80,11 +80,16 @@ public class NewsAdapter extends BaseAdapter implements AbsListView.OnScrollList
         String iconURL=news.getNewsIconrl();
         viewHolder.newsIcon.setTag(iconURL);
         viewHolder.newsIcon.setImageResource(R.drawable.ic_launcher);
+        //用滚动控制加载显示的部分，因此下面这部分去掉
 //        if(imageLoader.getLrcBitmap(iconURL)!=null){
 //            viewHolder.newsIcon.setImageBitmap(imageLoader.getLrcBitmap(iconURL));
 //        }else{
 //            imageLoader.setBitmap(viewHolder.newsIcon,iconURL);
 //        }
+        //只需从缓存中取，若有则设置上，没有则默认
+        if(imageLoader.getLrcBitmap(iconURL)!=null){
+            viewHolder.newsIcon.setImageBitmap(imageLoader.getLrcBitmap(iconURL));
+        }
         viewHolder.title.setText(news.getNewsName());
         viewHolder.content.setText(news.getNewsDescription());
 
