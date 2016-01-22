@@ -93,11 +93,10 @@ public class DataCleanManager {
 //        cleanDatabases(context);
 //        cleanSharedPreference(context);
         //cleanFiles(context);
-        if (filepath == null) {
-            return;
-        }
         for (String filePath : filepath) {
-            cleanCustomCache(filePath);
+            if (filePath != null) {
+                cleanCustomCache(filePath);
+            }
         }
     }
 
@@ -107,14 +106,14 @@ public class DataCleanManager {
     private static boolean deleteFilesByDirectory(File dir) {
         if (dir != null && dir.isDirectory()) {
             String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                boolean success = deleteFilesByDirectory(new File(dir, children[i]));
+            for (String aChildren : children) {
+                boolean success = deleteFilesByDirectory(new File(dir, aChildren));
                 if (!success) {
                     return false;
                 }
             }
         }
-        return dir.delete();
+        return dir != null && dir.delete();
     }
 
     /**
@@ -128,15 +127,16 @@ public class DataCleanManager {
     //Context.getExternalFilesDir() --> SDCard/Android/data/你的应用的包名/files/ 目录，一般放一些长时间保存的数据
     //Context.getExternalCacheDir() --> SDCard/Android/data/你的应用包名/cache/目录，一般存放临时缓存数据
     public static long getFolderSize(File file) throws Exception {
+        if (file == null) return 0;
         long size = 0;
         try {
             File[] fileList = file.listFiles();
-            for (int i = 0; i < fileList.length; i++) {
+            for (File aFileList : fileList) {
                 // 如果下面还有文件
-                if (fileList[i].isDirectory()) {
-                    size = size + getFolderSize(fileList[i]);
+                if (aFileList.isDirectory()) {
+                    size = size + getFolderSize(aFileList);
                 } else {
-                    size = size + fileList[i].length();
+                    size = size + aFileList.length();
                 }
             }
         } catch (Exception e) {
@@ -158,8 +158,8 @@ public class DataCleanManager {
                 File file = new File(filePath);
                 if (file.isDirectory()) {// 如果下面还有文件
                     File files[] = file.listFiles();
-                    for (int i = 0; i < files.length; i++) {
-                        deleteFolderFile(files[i].getAbsolutePath(), true);
+                    for (File file1 : files) {
+                        deleteFolderFile(file1.getAbsolutePath(), true);
                     }
                 }
                 if (deleteThisPath) {
@@ -238,6 +238,24 @@ public class DataCleanManager {
         return getFormatSize(size);
     }
 
+    /**
+     * 获取格式化缓存文件或者目录大小
+     *
+     * @param mContext
+     * @return
+     * @throws Exception
+     */
+    public static String getCacheSize(Context mContext) throws Exception {
+        long size = 0;
+        size += getFolderSize(null);
+//        size += getFolderSize(new File("/data/data/"
+//                + mContext.getPackageName() + "/databases"));
+//        size += getFolderSize(mContext.getExternalCacheDir());
+        size += getFolderSize(mContext.getCacheDir());
+        //size += getFolderSize(mContext.getFilesDir());
+        return getFormatSize(size);
+    }
+
     public static String getSDPath() {
         File sdDir = null;
         boolean sdCardExist = Environment.getExternalStorageState()
@@ -245,7 +263,7 @@ public class DataCleanManager {
         if (sdCardExist) {
             sdDir = Environment.getExternalStorageDirectory();//获取根目录
         }
-        return sdDir.toString();
+        return sdDir != null ? sdDir.toString() : null;
 
     }
 
